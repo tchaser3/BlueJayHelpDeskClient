@@ -46,6 +46,7 @@ namespace BlueJayHelpDesk
         ComboEmployeeDataSet TheComboEmployeeDataSet = new ComboEmployeeDataSet();
         FindHelpDeskTicketbyTicketMatchDateDataSet TheFindHelpDeskTicketByMatchDateDataSet = new FindHelpDeskTicketbyTicketMatchDateDataSet();
         FindPhoneExtensionByEmployeeIDDataSet TheFindPhoneExtensionByEmployeeIDDataSet = new FindPhoneExtensionByEmployeeIDDataSet();
+        FindEmployeeByEmployeeIDDataSet TheFindEmployeeByEmployeeIDDataSet = new FindEmployeeByEmployeeIDDataSet();
 
         //setting global variables
         int gintWarehouseID;
@@ -58,6 +59,7 @@ namespace BlueJayHelpDesk
         string gstrUserName;
         string gstrIPAddress;
         string strOffice;
+        string gstrEmailAddress;
 
         public MainWindow()
         {
@@ -213,6 +215,24 @@ namespace BlueJayHelpDesk
                     gintEmployeeID = TheComboEmployeeDataSet.employees[intSelectedIndex].EmployeeID;
                     gstrFullName = TheComboEmployeeDataSet.employees[intSelectedIndex].FullName;
 
+                    TheFindEmployeeByEmployeeIDDataSet = TheEmployeeClass.FindEmployeeByEmployeeID(gintEmployeeID);
+
+                    if(TheFindEmployeeByEmployeeIDDataSet.FindEmployeeByEmployeeID[0].IsEmailAddressNull() == true)
+                    {
+                        gstrEmailAddress = "NONE";
+                    }
+                    else
+                    {
+                        gstrEmailAddress = TheFindEmployeeByEmployeeIDDataSet.FindEmployeeByEmployeeID[0].EmailAddress;
+
+                        if(gstrEmailAddress.Contains("bluejaycommunications.com") == false)
+                        {
+                            gstrEmailAddress = "NONE";
+                        }
+                    }
+
+                    
+
                     TheFindPhoneExtensionByEmployeeIDDataSet = ThePhonesClass.FindPhoneExtensionByEmployeeID(gintEmployeeID);
 
                     intRecordsReturned = TheFindPhoneExtensionByEmployeeIDDataSet.FindPhoneExtensionByEmployeeID.Rows.Count;
@@ -304,7 +324,17 @@ namespace BlueJayHelpDesk
                 if (blnFatalError == false)
                     throw new Exception();
 
+                if(gstrEmailAddress != "NONE")
+                {
+                    blnFatalError = TheSendEmailClass.SendEmail(gstrEmailAddress, strHeader, strMessage);
+
+                    if (blnFatalError == false)
+                        throw new Exception();
+                }
+
                 TheMessagesClass.InformationMessage("Help Desk Ticket Number " + Convert.ToString(gintTicketID) + " Has Been Created");
+
+                this.Close();
                 
             }
             catch(Exception Ex)
